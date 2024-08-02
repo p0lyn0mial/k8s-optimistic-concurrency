@@ -3,15 +3,18 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/openshift/library-go/pkg/operator/events"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/openshift/library-go/pkg/config/helpers"
+	"github.com/openshift/library-go/pkg/operator/events"
 )
 
 func main() {
@@ -29,6 +32,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	_, err = client.CoreV1().Namespaces().Create(context.TODO(), &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "foo"}}, metav1.CreateOptions{})
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		panic(err)
+	}
+	_, err = client.CoreV1().ConfigMaps("foo").Create(context.TODO(), &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "bar"}}, metav1.CreateOptions{})
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		panic(err)
+	}
+
 	kubeInformers := informers.NewSharedInformerFactory(client, 1*time.Hour)
 	memoryRecorder := events.NewInMemoryRecorder("k8s-oc")
 

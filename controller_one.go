@@ -42,6 +42,9 @@ func (c *controllerOne) sync(ctx context.Context, _ factory.SyncContext) error {
 		return err
 	}
 	configMapCopy := configMap.DeepCopy()
+	if configMapCopy.Data == nil {
+		configMapCopy.Data = map[string]string{}
+	}
 	configMapCopy.Data["controllerOne"] = fmt.Sprintf("alive-%d", c.updateCounter)
 
 	_, err = c.client.ConfigMaps("foo").Update(ctx, configMapCopy, metav1.UpdateOptions{})
