@@ -34,11 +34,13 @@ func main() {
 
 	ctrlOne := newControllerOne(client.CoreV1(), kubeInformers.Core().V1(), memoryRecorder)
 	ctrlTwo := newControllerTwo(client.CoreV1(), kubeInformers.Core().V1(), memoryRecorder)
+	consistencyInvariants := newDataConsistencyInvariants(client.CoreV1())
 
 	ctx := setupSignalContext(context.Background())
 	kubeInformers.Start(ctx.Done())
 	go ctrlOne.Run(ctx, 1)
 	go ctrlTwo.Run(ctx, 1)
+	go consistencyInvariants.Run(ctx)
 
 	klog.Info("Waiting for SIGTERM or SIGINT signal to initiate shutdown")
 	<-ctx.Done()
